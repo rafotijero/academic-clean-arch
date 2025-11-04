@@ -1,0 +1,141 @@
+# application.yml - Configuración principal
+spring:
+  application:
+    name: academic-enrollment-system
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/academic_enrollment
+    username: ${DB_USERNAME:academic_user}
+    password: ${DB_PASSWORD:academic_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+          batch_size: 25
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jackson:
+    time-zone: UTC
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    com.academic.enrollment: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    ROOT: INFO
+  pattern:
+    file: "[%d{yyyy-MM-dd HH:mm:ss}] [%level] [%logger{36}] - %msg%n"
+    console: "[%d{yyyy-MM-dd HH:mm:ss}] [%highlight(%level)] [%cyan(%logger{36})] - %msg%n"
+
+# Configuración de OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: true
+
+# Configuración específica de la aplicación
+academic:
+  enrollment:
+    # Configuración de períodos académicos
+    academic-period:
+      enrollment-start-days-before: 30
+      enrollment-end-days-before: 7
+      max-credits-per-period: 24
+      min-credits-per-period: 12
+
+    # Configuración de pagos
+    payment:
+      default-currency: USD
+      payment-deadline-days: 15
+      late-payment-fee-percentage: 5
+
+    # Configuración de notificaciones
+    notification:
+      email:
+        enabled: true
+        from-address: noreply@academic.edu
+        enrollment-confirmation-template: enrollment-confirmation
+        payment-reminder-template: payment-reminder
+      sms:
+        enabled: false
+        provider: twilio
+        api-key: ${SMS_API_KEY:}
+
+    # Configuración de secciones
+    section:
+      default-capacity: 30
+      max-capacity: 50
+      min-capacity: 10

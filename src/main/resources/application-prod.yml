@@ -1,0 +1,47 @@
+# application-prod.yml - Configuración para producción
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # NO modificar esquema en producción
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true  # Habilitar Flyway en producción
+
+logging:
+  level:
+    com.academic.enrollment: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    ROOT: WARN
+
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+
+academic:
+  enrollment:
+    notification:
+      email:
+        enabled: true
+      sms:
+        enabled: true

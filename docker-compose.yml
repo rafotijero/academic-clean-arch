@@ -1,0 +1,72 @@
+# docker-compose.yml
+# Configuración de Docker para Academic Enrollment System
+# Ejecutar con: docker-compose up -d
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: academic-postgres
+    environment:
+      POSTGRES_DB: academic_enrollment
+      POSTGRES_USER: academic_user
+      POSTGRES_PASSWORD: academic_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/schema-and-data.sql:/docker-entrypoint-initdb.d/01-schema-and-data.sql
+    networks:
+      - academic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic_user -d academic_enrollment"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin para administración de base de datos
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: academic-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@academic.edu
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    networks:
+      - academic-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # Aplicación Spring Boot
+  academic-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: academic-enrollment-app
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/academic_enrollment
+      DB_USERNAME: academic_user
+      DB_PASSWORD: academic_pass
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - academic-network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  academic-network:
+    driver: bridge
